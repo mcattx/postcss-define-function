@@ -27,5 +27,6 @@ postcss([ require('postcss-precss-function') ])
 See [PostCSS] docs for examples for your environment.
 
 ##Thanks
-[postcss-plugin-boilerplate](https://github.com/postcss/postcss-plugin-boilerplate)
-[postcss-mixins](https://github.com/postcss/postcss-mixins)
+
+- [postcss-plugin-boilerplate](https://github.com/postcss/postcss-plugin-boilerplate)
+- [postcss-mixins](https://github.com/postcss/postcss-mixins)
