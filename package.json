@@ -1,0 +1,37 @@
+{
+  "name": "postcss-precss-function",
+  "version": "0.0.0",
+  "description": "PostCSS plugin A plugin to implement sass @function in precss",
+  "keywords": [
+    "postcss",
+    "css",
+    "postcss-plugin",
+    "precss",
+    "function",
+    "sass"
+  ],
+  "author": "mcattx <mcattx@gmail.com>",
+  "license": "MIT",
+  "repository": "titancat/postcss-precss-function",
+  "bugs": {
+    "url": "https://github.com/titancat/postcss-precss-function/issues"
+  },
+  "homepage": "https://github.com/titancat/postcss-precss-function",
+  "dependencies": {
+    "postcss": "^5.2.6"
+  },
+  "devDependencies": {
+    "jest": "^17.0.2",
+    "eslint": "^3.10.2",
+    "eslint-config-postcss": "^2.0.2"
+  },
+  "scripts": {
+    "test": "jest && eslint *.js"
+  },
+  "eslintConfig": {
+    "extends": "eslint-config-postcss/es5",
+    "env": {
+      "jest": true
+    }
+  }
+}
