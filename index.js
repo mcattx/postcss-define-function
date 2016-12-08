@@ -115,6 +115,28 @@ function defineFunction(result, fns, rule) {
     rule.remove();
 }
 
+/**
+ * [fnFilter description]
+ * @param  {[Array]} arr
+ * @return {[Array]} resultArr    [all "define-function" type array]
+ */
+function fnFilter(arr) {
+    var resultArr = [];
+    if(!Array.isArray(arr)){
+        console.log('The fnFilter function requires param arr which is Array.')
+    }
+    for (var i = 0; i < arr.length; i++) {
+        if(arr[i].type === 'atrule' && arr[i].name === 'define-function') {
+            resultArr.push(arr[i]);
+        }
+    }
+
+    return resultArr;
+}
+
+/**
+ *  refer to http://astexplorer.net/#/2uBU1BLuJ1 .
+ */
 module.exports = postcss.plugin('postcss-precss-function', function (opts) {
 
     if(typeof opts === 'undefined') {
@@ -124,24 +146,13 @@ module.exports = postcss.plugin('postcss-precss-function', function (opts) {
     opts = opts || {};
 
     var cwd = process.cwd();
-    var globs = [];
-    var fns = {};
 
-    if(opts.fnsDir) {
-        if(!Array.isArray(opts.fnsDir)) {
-            opts.fnsDir = [opts.fnsDir];
-        }
-        globs = opts.fnsDir.map(function(dir) {
-            return path.join(dir, '*.{js,json,css,sss,pcss}');
-        });
-    }
+    return function(root, result) {
 
-    if(opts.fnsFiles) {
-        globs = globs.concat(opts.fnsFiles);
-    }
-
-    return function(css, result) {
-
+        var fnNodeArr = fnFilter(root.nodes);
+        //console.log(nodes.length)
+        console.log('nodes: ' + JSON.stringify(fnNodeArr));
+        // console.log('atnodeArr: ' + JSON.stringify(atnodeArr));
     }
 
     // Work with options here
