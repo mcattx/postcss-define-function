@@ -7,6 +7,13 @@ var path = require('path');
 var fs = require('fs');
 var isWindows = require('os').platform().indexOf('win32') !== -1;
 
+//
+var fnObj = [];
+
+function removeSpace(str) {
+    return str.replace(/\s+/g, '');
+}
+
 function insideDefine(rule) {
     var parent = rule.parent;
     if(!parent) {
@@ -28,7 +35,7 @@ function insertObject(rule, obj, processFns) {
 }
 
 /**
- *  Beacuse function is a reserved keyword in JavaScript.
+ *  Beacuse 'function' is a reserved keyword in JavaScript.
  *  Create an alias: function -> fn
  */
 
@@ -116,22 +123,82 @@ function defineFunction(result, fns, rule) {
 }
 
 /**
- * [fnFilter description]
- * @param  {[Array]} arr
- * @return {[Array]} resultArr    [all "define-function" type array]
+ * [Filter the desired type in the nodes]
+ * @param  {[Array]} nodes    [The node to be filtered]
+ * @param  {[String]} nodeType [atrule default]
+ * @param  {[String]} typeName [type name]
+ * @return {[Array]}          [desired type array]
  */
-function fnFilter(arr) {
+function nodeTypeFilter(nodes, typeName, nodeType) {
+    nodeType = nodeType || 'atrule';
     var resultArr = [];
-    if(!Array.isArray(arr)){
-        console.log('The fnFilter function requires param arr which is Array.')
+    if(!Array.isArray(nodes)){
+        console.log('The nodeTypeFilter function requires param nodes which is Array.')
     }
-    for (var i = 0; i < arr.length; i++) {
-        if(arr[i].type === 'atrule' && arr[i].name === 'define-function') {
-            resultArr.push(arr[i]);
+
+    for (var i = 0; i < nodes.length; i++) {
+        if(nodes[i].type === nodeType && nodes[i].name === typeName) {
+            resultArr.push(nodes[i]);
         }
     }
 
     return resultArr;
+}
+
+/**
+ *  @define-function rem($val) {
+ *      @return $val / 640 * 10 * 1rem;
+ *  }
+ *
+ *  a {
+ *      height: rem(640);
+*   }
+ */
+
+// '$a' => 'a'
+function getVariable(str) {
+    return str.substr(1);
+}
+
+// 'rem($a, $b)' => {fnName: 'rem', fnArgs: [$a, $b]}
+// '@return $val / 640 * 10 * 1rem' => {fnContent: '$val / 640 * 10 * 1rem'}
+function getFnProps(fnNode) {
+    var rs = {};
+    var propsStr = fnNode.params;
+    propsStr = removeSpace(propsStr);
+
+    var nameRE = /[\w]+\(/g;
+    var paramsRE = /\(\S+\)/g;
+    var fnName = propsStr.match(nameRE)[0];
+    var fnArgs = [];
+    var fnContent = '';
+
+    var fnContentNode = nodeTypeFilter(fnNode.nodes, 'return');
+
+    fnName = fnName.substring(0, fnName.length - 1);
+    fnArgs = propsStr.match(paramsRE)[0].replace(/\(|\)/g, '').split(',');
+    fnContent = fnContentNode[0].params;
+
+    rs.fnName = fnName;
+    rs.fnArgs = fnArgs;
+    rs.fnContent = fnContent;
+
+    return rs;
+}
+
+// ''
+function getFnContent(contentStr) {
+    contentStr = contentStr + '';
+    contentStr = removeSpace(contentStr);
+
+    var rs = '';
+    rs = contentStr;
+
+    return rs;
+}
+
+function parseFn(node) {
+
 }
 
 /**
@@ -149,17 +216,15 @@ module.exports = postcss.plugin('postcss-precss-function', function (opts) {
 
     return function(root, result) {
 
-        var fnNodeArr = fnFilter(root.nodes);
-        //console.log(nodes.length)
-        console.log('nodes: ' + JSON.stringify(fnNodeArr));
-        // console.log('atnodeArr: ' + JSON.stringify(atnodeArr));
+        var fnNodeArr = nodeTypeFilter(root.nodes, 'define-function');
+
+        var parseRs = getFnProps(fnNodeArr[0]);
+
+        // output result
+        // console.log('result: ' + JSON.stringify(result));
+
+
     }
 
-    // Work with options here
 
-    // return function (root, result) {
-
-    //     // Transform CSS AST here
-
-    // };
 });
