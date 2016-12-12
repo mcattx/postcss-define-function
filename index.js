@@ -9,6 +9,10 @@ var isWindows = require('os').platform().indexOf('win32') !== -1;
 
 //
 var fnObj = [];
+var invokeObj = [];
+
+var DEFINEFUNCTION_KEY = 'define-function';
+var RETURN_KEY = 'return';
 
 function removeSpace(str) {
     return str.replace(/\s+/g, '');
@@ -183,18 +187,50 @@ function getFnProps(fnNode) {
     rs.fnArgs = fnArgs;
     rs.fnContent = fnContent;
 
+    //console.log(rs);
+
     return rs;
 }
 
-// ''
-function getFnContent(contentStr) {
-    contentStr = contentStr + '';
-    contentStr = removeSpace(contentStr);
+// fnObj = {
+//     'rem': {
+//         'params': [a, b],
+//         'content': 'a + b'
+//     },
+//     'tofix': {
+//         'params': [a],
+//         'content': 'rea'
+//     }
+// }
 
-    var rs = '';
-    rs = contentStr;
+//height: rem(640);
+function getInvokedParams(node) {
+    var result = {};
 
-    return rs;
+    var fnValueRE = /\(\S*\)/g;
+    var fnNameRE = /\S+\(/g;
+
+    var nodeValue = removeSpace(node.value);
+    if(fnValueRE.test(nodeValue)) {
+        var valueStr = nodeValue.match(fnValueRE)[0].replace(/\(|\)/g, '');
+        var temp = nodeValue.match(fnNameRE)[0];
+        var nameStr = temp.substr(0, temp.length - 1);
+
+        if (valueStr) {
+            result.value = valueStr.split(',');
+        } else {
+            result.value = [];
+        }
+
+        if(nameStr) {
+            result.name = nameStr;
+        }
+
+    }
+
+    console.log(result);
+
+    return result;
 }
 
 function parseFn(node) {
@@ -219,6 +255,15 @@ module.exports = postcss.plugin('postcss-precss-function', function (opts) {
         var fnNodeArr = nodeTypeFilter(root.nodes, 'define-function');
 
         var parseRs = getFnProps(fnNodeArr[0]);
+
+        // remove define statement in result
+        root.walkAtRules(function(rule) {
+            if (rule.name === DEFINEFUNCTION_KEY) {
+                rule.remove();
+            }
+        })
+
+
 
         // output result
         // console.log('result: ' + JSON.stringify(result));
