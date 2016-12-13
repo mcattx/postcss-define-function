@@ -8,8 +8,9 @@ var fs = require('fs');
 var isWindows = require('os').platform().indexOf('win32') !== -1;
 
 //
-var fnObj = [];
-var invokeObj = [];
+var fn = {};
+// record all customize function name
+var fnNameList = [];
 
 var DEFINEFUNCTION_KEY = 'define-function';
 var RETURN_KEY = 'return';
@@ -18,113 +19,113 @@ function removeSpace(str) {
     return str.replace(/\s+/g, '');
 }
 
-function insideDefine(rule) {
-    var parent = rule.parent;
-    if(!parent) {
-        return false;
-    } else if(parent.name === 'define-function') {
-        return true;
-    } else {
-        return insideDefine(parent);
-    }
-}
+// function insideDefine(rule) {
+//     var parent = rule.parent;
+//     if(!parent) {
+//         return false;
+//     } else if(parent.name === 'define-function') {
+//         return true;
+//     } else {
+//         return insideDefine(parent);
+//     }
+// }
 
-function insertObject(rule, obj, processFns) {
-    var root = jsToCss(obj);
-    root.each(function(node) {
-        node.source = rule.source;
-    });
-    processFns(root);
-    rule.parent.insertObject(rule, root);
-}
+// function insertObject(rule, obj, processFns) {
+//     var root = jsToCss(obj);
+//     root.each(function(node) {
+//         node.source = rule.source;
+//     });
+//     processFns(root);
+//     rule.parent.insertObject(rule, root);
+// }
 
-/**
- *  Beacuse 'function' is a reserved keyword in JavaScript.
- *  Create an alias: function -> fn
- */
+// /**
+//  *  Beacuse 'function' is a reserved keyword in JavaScript.
+//  *  Create an alias: function -> fn
+//  */
 
-function insertFn(result, fns, rule, processFns, opts) {
-    var name = rule.params.split(/\s/, 1)[0];
-    var rest = rule.params.slice(name.length).trim();
+// function insertFn(result, fns, rule, processFns, opts) {
+//     var name = rule.params.split(/\s/, 1)[0];
+//     var rest = rule.params.slice(name.length).trim();
 
-    var params;
-    if(rest.trim() === '') {
-        params = [];
-    } else {
-        params = postcss.list.comma(rest);
-    }
+//     var params;
+//     if(rest.trim() === '') {
+//         params = [];
+//     } else {
+//         params = postcss.list.comma(rest);
+//     }
 
-    var meta = fns[name];
-    var fn = meta && meta.fn;
+//     var meta = fns[name];
+//     var fn = meta && meta.fn;
 
-    if(!meta) {
-        if(!opts.silent) {
-            throw rule.error('Undefined function ' + name);
-        }
-    } else if(fn.name === 'define-function') {
-        var i;
-        var values = {};
-        for(i = 0; i < meta.args.length; i++) {
-            values[meta.args[i][0]] = params[i] || meta.args[i][1];
-        }
+//     if(!meta) {
+//         if(!opts.silent) {
+//             throw rule.error('Undefined function ' + name);
+//         }
+//     } else if(fn.name === 'define-function') {
+//         var i;
+//         var values = {};
+//         for(i = 0; i < meta.args.length; i++) {
+//             values[meta.args[i][0]] = params[i] || meta.args[i][1];
+//         }
 
-        var proxy = postcss.root();
-        for(i = 0; i < fn.node.length; i++) {
-            proxy.append(fn.node[i].clone());
-        }
+//         var proxy = postcss.root();
+//         for(i = 0; i < fn.node.length; i++) {
+//             proxy.append(fn.node[i].clone());
+//         }
 
-        if(meta.args.length) {
-            vars({only: values})(proxy);
-        }
+//         if(meta.args.length) {
+//             vars({only: values})(proxy);
+//         }
 
-        if(meta.content) {
-            proxy.walkAtRules('function-content', function(content) {
-                if(rule.nodes && rule.nodes.length > 0) {
-                    content.replaceWith(rule.nodes)
-                } else {
-                    content.remove();
-                }
-            })
-        }
+//         if(meta.content) {
+//             proxy.walkAtRules('function-content', function(content) {
+//                 if(rule.nodes && rule.nodes.length > 0) {
+//                     content.replaceWith(rule.nodes)
+//                 } else {
+//                     content.remove();
+//                 }
+//             })
+//         }
 
-        processFns(proxy);
+//         processFns(proxy);
 
-        rule.parent.insertBefore(rule, proxy);
-    } else if(typeof fn === 'object') {
-        insertObject(rule, fn, processFns);
-    } else if(typeof fn === 'function') {
-        var args = [rule].concat(params);
-        var nodes = fn.apply(this, args);
-        if(typeof nodes === 'object') {
-            insertObject(rule, nodes, processFns);
-        }
-    } else {
-        console.log('something wrong happened.')
-    }
-}
+//         rule.parent.insertBefore(rule, proxy);
+//     } else if(typeof fn === 'object') {
+//         insertObject(rule, fn, processFns);
+//     } else if(typeof fn === 'function') {
+//         var args = [rule].concat(params);
+//         var nodes = fn.apply(this, args);
+//         if(typeof nodes === 'object') {
+//             insertObject(rule, nodes, processFns);
+//         }
+//     } else {
+//         console.log('something wrong happened.')
+//     }
+// }
 
-function defineFunction(result, fns, rule) {
-    var name = rule.params.split(/\s/, 1)[0];
-    var other = rule.params.slice(name.length).trim();
+// function defineFunction(result, fns, rule) {
+//     var name = rule.params.split(/\s/, 1)[0];
+//     var other = rule.params.slice(name.length).trim();
 
-    var args = [];
-    if(other.length) {
+//     var args = [];
+//     if(other.length) {
 
-    }
-    var content = false;
-    rule.walkAtRules('function-content', function() {
-        content = true;
-        return false;
-    });
+//     }
+//     var content = false;
+//     rule.walkAtRules('function-content', function() {
+//         content = true;
+//         return false;
+//     });
 
-    fn[name] = {
-        fn: rule,
-        args: args,
-        content: content
-    };
+//     fn[name] = {
+//         fn: rule,
+//         args: args,
+//         content: content
+//     };
 
-    rule.remove();
-}
+//     rule.remove();
+// }
 
 /**
  * [Filter the desired type in the nodes]
@@ -188,30 +189,28 @@ function getFnProps(fnNode) {
     rs.fnContent = fnContent;
 
     //console.log(rs);
+    fn[fnName] = {
+        'fn': fnName,
+        'args': fnArgs,
+        'content': fnContent
+    }
+
+    fnNameList.push(fnName);
 
     return rs;
 }
 
-// fnObj = {
-//     'rem': {
-//         'params': [a, b],
-//         'content': 'a + b'
-//     },
-//     'tofix': {
-//         'params': [a],
-//         'content': 'rea'
-//     }
-// }
-
 //height: rem(640);
-function getInvokedParams(node) {
+function getInvokedParams(value) {
     var result = {};
 
     var fnValueRE = /\(\S*\)/g;
     var fnNameRE = /\S+\(/g;
 
-    var nodeValue = removeSpace(node.value);
+    var nodeValue = removeSpace(value);
+
     if(fnValueRE.test(nodeValue)) {
+
         var valueStr = nodeValue.match(fnValueRE)[0].replace(/\(|\)/g, '');
         var temp = nodeValue.match(fnNameRE)[0];
         var nameStr = temp.substr(0, temp.length - 1);
@@ -228,10 +227,50 @@ function getInvokedParams(node) {
 
     }
 
-    console.log(result);
+    //console.log(result);
 
     return result;
 }
+
+function replaceFn(fnName, fnValueArr) {
+    //'$val / 640 * 10 * 1rem';
+    var newContent = '';
+    var variableRE = /(\$\w+)([\+\-\*/@])/g;
+    var content = removeSpace(fn[fnName].content);
+    // to get '$a' in the end of a content string. beacuse of my bad Reg
+    content = content + '@';
+    var length = fnValueArr.length;
+
+    if (length) {
+
+        var i = 0;
+        var replacer = function(str, $1, $2) {
+            if(fnValueArr[i]){
+                return fnValueArr[i++] + $2;
+            } else {
+                return str;
+            }
+
+        }
+        content = content.replace(variableRE, replacer);
+        console.log(content)
+    } else {
+        // no params
+        content = content;
+    }
+    // delete '@'
+    newContent = content.substr(0, content.length - 1);
+    console.log(newContent);
+    return newContent;
+}
+
+fn['test'] = {
+    'fn': 'test',
+    'args': '100',
+    'content': '$val / 640 * 10 * 1rem + $a + $b'
+}
+
+replaceFn('test', ['第一个', '第二个', '第三个']);
 
 function parseFn(node) {
 
@@ -252,18 +291,37 @@ module.exports = postcss.plugin('postcss-precss-function', function (opts) {
 
     return function(root, result) {
 
-        var fnNodeArr = nodeTypeFilter(root.nodes, 'define-function');
+        var fnNodeArr = nodeTypeFilter(root.nodes, DEFINEFUNCTION_KEY);
 
         var parseRs = getFnProps(fnNodeArr[0]);
 
         // remove define statement in result
         root.walkAtRules(function(rule) {
+
             if (rule.name === DEFINEFUNCTION_KEY) {
                 rule.remove();
             }
+
+            //getInvokedParams(rule.params)
         })
 
-
+        // root.walkRules(function(rule) {
+        //     console.log(JSON.stringify(rule))
+        // });
+        //
+        root.walkDecls(function(rule) {
+            var temp = getInvokedParams(rule.value);
+            var resultNode = {
+                prop: '',
+                value: ''
+            }
+            if(temp.name) {
+                resultNode.prop = rule.prop;
+                resultNode.value = '';
+                //console.log(resultNode)
+            }
+            rule.replaceWith({prop: 'a', value: 'b'})
+        })
 
         // output result
         // console.log('result: ' + JSON.stringify(result));
