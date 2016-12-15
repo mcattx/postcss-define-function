@@ -286,8 +286,6 @@ function computeValue(valueStr) {
     return resultStr;
 }
 
-computeValue('640 / 640 * 10 * 1rem');
-
 /**
  *  refer to http://astexplorer.net/#/2uBU1BLuJ1 .
  */
@@ -325,10 +323,13 @@ module.exports = postcss.plugin('postcss-precss-function', function (opts) {
             }
             if(temp.name) {
                 resultNode.prop = rule.prop;
-                resultNode.value = replaceFn(temp.name, temp.value);
-                console.log(resultNode)
+                var tempValue = replaceFn(temp.name, temp.value);
+                resultNode.value = computeValue(tempValue);
             }
-            rule.replaceWith({prop: 'a', value: 'b'})
+            if (resultNode.prop) {
+                rule.replaceWith({prop: resultNode.prop, value: resultNode.value})
+            }
+
         })
 
         // output result
