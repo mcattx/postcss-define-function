@@ -233,7 +233,6 @@ function getInvokedParams(value) {
 }
 
 function replaceFn(fnName, fnValueArr) {
-    //'$val / 640 * 10 * 1rem';
     var newContent = '';
     var variableRE = /(\$\w+)([\+\-\*/@])/g;
     var content = removeSpace(fn[fnName].content);
@@ -253,28 +252,41 @@ function replaceFn(fnName, fnValueArr) {
 
         }
         content = content.replace(variableRE, replacer);
-        console.log(content)
+
     } else {
         // no params
         content = content;
     }
     // delete '@'
     newContent = content.substr(0, content.length - 1);
-    console.log(newContent);
+
     return newContent;
 }
 
-fn['test'] = {
-    'fn': 'test',
-    'args': '100',
-    'content': '$val / 640 * 10 * 1rem + $a + $b'
+// fn['test'] = {
+//     'fn': 'test',
+//     'args': '100',
+//     'content': '$val / 640 * 10 * 1rem + $a + $b'
+// }
+
+// replaceFn('test', ['第一个', '第二个', '第三个']);
+
+function computeValue(valueStr) {
+    var resultStr = '';
+    // length data unit
+    var unit = ['%', 'in', 'cm', 'mm', 'em', 'ex', 'pt', 'pc', 'px', 'rem', 'vh', 'vw', 'vmin', 'vmax', 'ch'];
+    var unitStr = unit.join('|');
+    var unitRE = new RegExp(unitStr, 'g');
+    var tempStr = valueStr.match(unitRE)[0];
+    if(tempStr) {
+        valueStr = valueStr.replace(tempStr, '');
+        valueStr = eval(valueStr);
+        resultStr = valueStr + tempStr;
+    }
+    return resultStr;
 }
 
-replaceFn('test', ['第一个', '第二个', '第三个']);
-
-function parseFn(node) {
-
-}
+computeValue('640 / 640 * 10 * 1rem');
 
 /**
  *  refer to http://astexplorer.net/#/2uBU1BLuJ1 .
@@ -303,12 +315,8 @@ module.exports = postcss.plugin('postcss-precss-function', function (opts) {
             }
 
             //getInvokedParams(rule.params)
-        })
+        });
 
-        // root.walkRules(function(rule) {
-        //     console.log(JSON.stringify(rule))
-        // });
-        //
         root.walkDecls(function(rule) {
             var temp = getInvokedParams(rule.value);
             var resultNode = {
@@ -317,8 +325,8 @@ module.exports = postcss.plugin('postcss-precss-function', function (opts) {
             }
             if(temp.name) {
                 resultNode.prop = rule.prop;
-                resultNode.value = '';
-                //console.log(resultNode)
+                resultNode.value = replaceFn(temp.name, temp.value);
+                console.log(resultNode)
             }
             rule.replaceWith({prop: 'a', value: 'b'})
         })
