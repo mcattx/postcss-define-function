@@ -1,27 +1,32 @@
-# PostCSS Precss Function [![Build Status][ci-img]][ci]
+# PostCSS Sass-like Function [![Build Status][ci-img]][ci]
 
-[PostCSS] plugin A plugin to implement sass @function in precss.
+[PostCSS] plugin to implement sass @function.
 
 [PostCSS]: https://github.com/postcss/postcss
-[ci-img]:  https://travis-ci.org/titancat/postcss-precss-function.svg
-[ci]:      https://travis-ci.org/titancat/postcss-precss-function
+[ci-img]:  https://travis-ci.org/titancat/postcss-sassLike-function.svg
+[ci]:      https://travis-ci.org/titancat/postcss-sassLike-function
 
 ```css
+@define-function rem($val) {
+    @return $val / 640 * 10 * 1rem;
+}
 .foo {
     /* Input example */
+    height: rem(640);
 }
 ```
 
 ```css
 .foo {
   /* Output example */
+  height: 10rem;
 }
 ```
 
 ## Usage
 
 ```js
-postcss([ require('postcss-precss-function') ])
+postcss([ require('postcss-sassLike-function') ])
 ```
 
 See [PostCSS] docs for examples for your environment.
