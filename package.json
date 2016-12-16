@@ -1,22 +1,23 @@
 {
-  "name": "postcss-precss-function",
+  "name": "postcss-define-function",
   "version": "0.0.0",
-  "description": "PostCSS plugin A plugin to implement sass @function in precss",
+  "description": "PostCSS plugin : A plugin to implement sass @function directive",
   "keywords": [
     "postcss",
     "css",
     "postcss-plugin",
-    "precss",
+    "define",
     "function",
+    "directive",
     "sass"
   ],
   "author": "mcattx <mcattx@gmail.com>",
   "license": "MIT",
-  "repository": "titancat/postcss-precss-function",
+  "repository": "titancat/postcss-define-function",
   "bugs": {
-    "url": "https://github.com/titancat/postcss-precss-function/issues"
+    "url": "https://github.com/titancat/postcss-define-function/issues"
   },
-  "homepage": "https://github.com/titancat/postcss-precss-function",
+  "homepage": "https://github.com/titancat/postcss-define-function",
   "dependencies": {
     "globby": "^6.1.0",
     "postcss": "^5.2.6",

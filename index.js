@@ -7,7 +7,6 @@ var path = require('path');
 var fs = require('fs');
 var isWindows = require('os').platform().indexOf('win32') !== -1;
 
-//
 var fn = {};
 // record all customize function name
 var fnNameList = [];
@@ -18,114 +17,6 @@ var RETURN_KEY = 'return';
 function removeSpace(str) {
     return str.replace(/\s+/g, '');
 }
-
-// function insideDefine(rule) {
-//     var parent = rule.parent;
-//     if(!parent) {
-//         return false;
-//     } else if(parent.name === 'define-function') {
-//         return true;
-//     } else {
-//         return insideDefine(parent);
-//     }
-// }
-
-// function insertObject(rule, obj, processFns) {
-//     var root = jsToCss(obj);
-//     root.each(function(node) {
-//         node.source = rule.source;
-//     });
-//     processFns(root);
-//     rule.parent.insertObject(rule, root);
-// }
-
-// /**
-//  *  Beacuse 'function' is a reserved keyword in JavaScript.
-//  *  Create an alias: function -> fn
-//  */
-
-// function insertFn(result, fns, rule, processFns, opts) {
-//     var name = rule.params.split(/\s/, 1)[0];
-//     var rest = rule.params.slice(name.length).trim();
-
-//     var params;
-//     if(rest.trim() === '') {
-//         params = [];
-//     } else {
-//         params = postcss.list.comma(rest);
-//     }
-
-//     var meta = fns[name];
-//     var fn = meta && meta.fn;
-
-//     if(!meta) {
-//         if(!opts.silent) {
-//             throw rule.error('Undefined function ' + name);
-//         }
-//     } else if(fn.name === 'define-function') {
-//         var i;
-//         var values = {};
-//         for(i = 0; i < meta.args.length; i++) {
-//             values[meta.args[i][0]] = params[i] || meta.args[i][1];
-//         }
-
-//         var proxy = postcss.root();
-//         for(i = 0; i < fn.node.length; i++) {
-//             proxy.append(fn.node[i].clone());
-//         }
-
-//         if(meta.args.length) {
-//             vars({only: values})(proxy);
-//         }
-
-//         if(meta.content) {
-//             proxy.walkAtRules('function-content', function(content) {
-//                 if(rule.nodes && rule.nodes.length > 0) {
-//                     content.replaceWith(rule.nodes)
-//                 } else {
-//                     content.remove();
-//                 }
-//             })
-//         }
-
-//         processFns(proxy);
-
-//         rule.parent.insertBefore(rule, proxy);
-//     } else if(typeof fn === 'object') {
-//         insertObject(rule, fn, processFns);
-//     } else if(typeof fn === 'function') {
-//         var args = [rule].concat(params);
-//         var nodes = fn.apply(this, args);
-//         if(typeof nodes === 'object') {
-//             insertObject(rule, nodes, processFns);
-//         }
-//     } else {
-//         console.log('something wrong happened.')
-//     }
-// }
-
-// function defineFunction(result, fns, rule) {
-//     var name = rule.params.split(/\s/, 1)[0];
-//     var other = rule.params.slice(name.length).trim();
-
-//     var args = [];
-//     if(other.length) {
-
-//     }
-//     var content = false;
-//     rule.walkAtRules('function-content', function() {
-//         content = true;
-//         return false;
-//     });
-
-//     fn[name] = {
-//         fn: rule,
-//         args: args,
-//         content: content
-//     };
-
-//     rule.remove();
-// }
 
 /**
  * [Filter the desired type in the nodes]
@@ -149,16 +40,6 @@ function nodeTypeFilter(nodes, typeName, nodeType) {
 
     return resultArr;
 }
-
-/**
- *  @define-function rem($val) {
- *      @return $val / 640 * 10 * 1rem;
- *  }
- *
- *  a {
- *      height: rem(640);
-*   }
- */
 
 // '$a' => 'a'
 function getVariable(str) {
@@ -188,7 +69,6 @@ function getFnProps(fnNode) {
     rs.fnArgs = fnArgs;
     rs.fnContent = fnContent;
 
-    //console.log(rs);
     fn[fnName] = {
         'fn': fnName,
         'args': fnArgs,
@@ -200,7 +80,6 @@ function getFnProps(fnNode) {
     return rs;
 }
 
-//height: rem(640);
 function getInvokedParams(value) {
     var result = {};
 
@@ -227,8 +106,6 @@ function getInvokedParams(value) {
 
     }
 
-    //console.log(result);
-
     return result;
 }
 
@@ -236,7 +113,7 @@ function replaceFn(fnName, fnValueArr) {
     var newContent = '';
     var variableRE = /(\$\w+)([\+\-\*/@])/g;
     var content = removeSpace(fn[fnName].content);
-    // to get '$a' in the end of a content string. beacuse of my bad Reg
+    // to get '$a' in the end of a content string beacuse of my bad Reg
     content = content + '@';
     var length = fnValueArr.length;
 
@@ -262,14 +139,6 @@ function replaceFn(fnName, fnValueArr) {
 
     return newContent;
 }
-
-// fn['test'] = {
-//     'fn': 'test',
-//     'args': '100',
-//     'content': '$val / 640 * 10 * 1rem + $a + $b'
-// }
-
-// replaceFn('test', ['第一个', '第二个', '第三个']);
 
 function computeValue(valueStr) {
     var resultStr = '';
@@ -312,7 +181,6 @@ module.exports = postcss.plugin('postcss-precss-function', function (opts) {
                 rule.remove();
             }
 
-            //getInvokedParams(rule.params)
         });
 
         root.walkDecls(function(rule) {
@@ -331,10 +199,6 @@ module.exports = postcss.plugin('postcss-precss-function', function (opts) {
             }
 
         })
-
-        // output result
-        // console.log('result: ' + JSON.stringify(result));
-
 
     }
 

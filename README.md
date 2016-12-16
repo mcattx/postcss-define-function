@@ -1,10 +1,10 @@
-# PostCSS Sass-like Function [![Build Status][ci-img]][ci]
+# PostCSS define Function [![Build Status][ci-img]][ci]
 
 [PostCSS] plugin to implement sass @function.
 
 [PostCSS]: https://github.com/postcss/postcss
-[ci-img]:  https://travis-ci.org/titancat/postcss-sassLike-function.svg
-[ci]:      https://travis-ci.org/titancat/postcss-sassLike-function
+[ci-img]:  https://travis-ci.org/titancat/postcss-define-function.svg
+[ci]:      https://travis-ci.org/titancat/postcss-define-function
 
 ```css
 @define-function rem($val) {
@@ -26,7 +26,7 @@
 ## Usage
 
 ```js
-postcss([ require('postcss-sassLike-function') ])
+postcss([ require('postcss-define-function') ])
 ```
 
 See [PostCSS] docs for examples for your environment.
