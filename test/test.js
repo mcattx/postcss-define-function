@@ -16,7 +16,7 @@ function run(t, input, output, opts) {
 // test case
 // core feature
 test('test core feature', t => {
-    return run(t, '@define-funtion rem($val) {@return $val / 640 * 10 * 1rem;} a {width: rem(640);}',
+    return run(t, '@define-function rem($val) {@return $val / 640 * 10 * 1rem;} a {width: rem(640);}',
         'a {width: 10rem;}'
         );
 });

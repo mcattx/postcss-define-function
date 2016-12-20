@@ -19,11 +19,8 @@
   },
   "homepage": "https://github.com/titancat/postcss-define-function",
   "dependencies": {
-    "globby": "^6.1.0",
     "postcss": "^5.2.6",
-    "postcss-js": "^0.1.3",
-    "postcss-simple-vars": "^3.0.0",
-    "sugarss": "^0.2.0"
+    "postcss-js": "^0.1.3"
   },
   "devDependencies": {
     "ava": "^0.17.0",
@@ -31,7 +28,7 @@
     "eslint-config-postcss": "^2.0.2"
   },
   "scripts": {
-    "test": "ava test/*.js && eslint *.js test/**/*.js"
+    "test": "ava test/*.js  test/**/*.js"
   },
   "eslintConfig": {
     "extends": "eslint-config-postcss/es5"

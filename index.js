@@ -1,8 +1,6 @@
 var jsToCss = require('postcss-js/parser');
 var postcss = require('postcss');
-var sugarss = require('sugarss');
-var globby = require('globby');
-var vars = require('postcss-simple-vars');
+
 var path = require('path');
 var fs = require('fs');
 var isWindows = require('os').platform().indexOf('win32') !== -1;
