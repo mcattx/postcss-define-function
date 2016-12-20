@@ -1,4 +1,4 @@
-# PostCSS define Function [![Build Status][ci-img]][ci]
+# PostCSS define-function [![Build Status][ci-img]][ci]
 
 [PostCSS] plugin to implement sass @function.
 
