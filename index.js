@@ -1,6 +1,6 @@
 var jsToCss = require('postcss-js/parser');
 var postcss = require('postcss');
-
+var vars = require('postcss-simple-vars');
 var path = require('path');
 var fs = require('fs');
 var isWindows = require('os').platform().indexOf('win32') !== -1;
@@ -10,10 +10,16 @@ var fn = {};
 var fnNameList = [];
 
 var DEFINEFUNCTION_KEY = 'define-function';
+var FUNCTION_KEY = 'function';
 var RETURN_KEY = 'return';
 
 function removeSpace(str) {
     return str.replace(/\s+/g, '');
+}
+
+// '$a' => 'a'
+function getVariable(str) {
+    return str.substr(1);
 }
 
 /**
@@ -39,11 +45,6 @@ function nodeTypeFilter(nodes, typeName, nodeType) {
     return resultArr;
 }
 
-// '$a' => 'a'
-function getVariable(str) {
-    return str.substr(1);
-}
-
 // 'rem($a, $b)' => {fnName: 'rem', fnArgs: [$a, $b]}
 // '@return $val / 640 * 10 * 1rem' => {fnContent: '$val / 640 * 10 * 1rem'}
 function getFnProps(fnNode) {
@@ -57,7 +58,7 @@ function getFnProps(fnNode) {
     var fnArgs = [];
     var fnContent = '';
 
-    var fnContentNode = nodeTypeFilter(fnNode.nodes, 'return');
+    var fnContentNode = nodeTypeFilter(fnNode.nodes, RETURN_KEY);
 
     fnName = fnName.substring(0, fnName.length - 1);
     fnArgs = propsStr.match(paramsRE)[0].replace(/\(|\)/g, '').split(',');
@@ -78,6 +79,10 @@ function getFnProps(fnNode) {
     return rs;
 }
 
+/**
+ * Separate params
+ * 'rem(10)' => {name: rem, value: ['10']}
+ */
 function getInvokedParams(value) {
     var result = {};
 
@@ -169,6 +174,12 @@ module.exports = postcss.plugin('postcss-precss-function', function (opts) {
     return function(root, result) {
 
         var fnNodeArr = nodeTypeFilter(root.nodes, DEFINEFUNCTION_KEY);
+        if (fnNodeArr.length == 0) {
+            //throw decl.error('a');
+            result.warn('b');
+            //throw rule.error('No define-function');
+            return;
+        }
 
         var parseRs = getFnProps(fnNodeArr[0]);
 
@@ -183,6 +194,11 @@ module.exports = postcss.plugin('postcss-precss-function', function (opts) {
 
         root.walkDecls(function(rule) {
             var temp = getInvokedParams(rule.value);
+            if (temp) {
+                if (fnNameList.indexOf(temp.name) == -1) {
+                    throw rule.error('Undefined function ' + name);
+                }
+            }
             var resultNode = {
                 prop: '',
                 value: ''

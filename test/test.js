@@ -2,6 +2,7 @@ var postcss = require('postcss');
 var path = require('path');
 var test = require('ava');
 
+// alias postcss-define-function -> fn
 var fn = require('../');
 
 function run(t, input, output, opts) {
@@ -13,13 +14,38 @@ function run(t, input, output, opts) {
     )
 }
 
-// test case
-// core feature
+// test cases
+
+/**
+ * [core feature]
+ * usage:
+ *
+ * @define-function functionName($foo) {
+ *     @return $foo + 10px;
+ * }
+ *
+ * @funciton .bar {
+ *     width: functionName(10);
+ * }
+ *
+ */
 test('test core feature', t => {
     return run(t, '@define-function rem($val) {@return $val / 640 * 10 * 1rem;} a {width: rem(640);}',
         'a {width: 10rem;}'
         );
 });
+
+test('throws error on unknown function', t => {
+    // return run(t, 'a{width: fix(10)}').catch(err => {
+    //     console.log('err: '+ err);
+    return postcss(fn).process('@function A').catch(err => {
+        t.deepEqual(err, 'Undefined function Aasdf asd');
+    })
+});
+
+// test('cans remove unknown function on request', t => {
+//     return run(t, '@function A; a{}', 'a{}', {silent: true});
+// });
 
 // test('supports function -- @functions', t => {
 
