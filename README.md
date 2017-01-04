@@ -10,7 +10,7 @@
 @define-function rem($val) {
     @return $val / 640 * 10 * 1rem;
 }
-.foo {
+@function .foo {
     /* Input example */
     height: rem(640);
 }

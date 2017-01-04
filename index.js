@@ -1,5 +1,6 @@
 var jsToCss = require('postcss-js/parser');
 var postcss = require('postcss');
+var globby = require('globby');
 var vars = require('postcss-simple-vars');
 var path = require('path');
 var fs = require('fs');
@@ -12,7 +13,13 @@ var fnNameList = [];
 var DEFINEFUNCTION_KEY = 'define-function';
 var FUNCTION_KEY = 'function';
 var RETURN_KEY = 'return';
+var PARSEFUNCTION_KEY = 'parseFn';
 
+/**
+ * [remove space in target string]
+ * @param  {[String]} str
+ * @return {[String]}
+ */
 function removeSpace(str) {
     return str.replace(/\s+/g, '');
 }
@@ -159,62 +166,209 @@ function computeValue(valueStr) {
 }
 
 /**
- *  refer to http://astexplorer.net/#/2uBU1BLuJ1 .
+ *  refactor refer: https://github.com/postcss/postcss-mixins/blob/master/index.js
+ *  beacuse last version code is too ugly, I decide to refactor my codes.
  */
-module.exports = postcss.plugin('postcss-precss-function', function (opts) {
 
-    if(typeof opts === 'undefined') {
+function insideDefine(rule) {
+    var parent = rule.parent;
+    if(!parent) {
+        return false;
+    } else if(parent.name === DEFINEFUNCTION_KEY) {
+        return true;
+    } else {
+        return insideDefine(parent);
+    }
+    console.log('insideDefine');
+}
+
+function insertObject(rule, obj, processFns) {
+    var root = jsToCss(obj);
+    root.each(function(node) {
+        node.source = rule.source;
+    });
+    processFns(root);
+    rule.parent.insertBefore(rule, root);
+    console.log('-----rule.parent-----');
+    console.log(rule.parent);
+    console.log('insertObject');
+}
+
+function insertFn(result, fns, rule, processFns, opts) {
+    console.log('------' + 'insertFn' + '------')
+    var name = rule.params.split(/\s/, 1)[0];
+    var rest = rule.params.slice(name.length).trim();
+
+    // console.log('name: ' + name);
+    // console.log('rest: ' + rest);
+
+    var params;
+    if(rest.trim() === '') {
+        params = [];
+    } else {
+        params = postcss.list.comma(rest);
+    }
+
+    // console.log('params: ' + params);
+
+    var meta = fns[name];
+    var fn = meta && meta.fn;
+
+    // console.log('meta: ' + meta);
+    // console.log('fn: ' + fn);
+
+    if (!meta) {
+        // if(!opts.silent) {
+        //     throw rule.error('Undefined @function ' + name);
+        // }
+    } else if(fn.name === DEFINEFUNCTION_KEY) {
+        var i;
+        var values = {};
+
+    }
+
+    if(rule.parent) {
+        rule.remove()
+    }
+
+}
+
+function defineFn(result, fns, rule) {
+    //console.log('------' + 'defineFn' + '------');
+    var fn = detachProps(rule);
+    var name = fn.name;
+    var args = fn.args;
+    var content = fn.content;
+
+    fns[name] = {
+        name: name,
+        args: args,
+        content: content
+    }
+    rule.remove();
+}
+
+/**
+ * [detach props from function definition]
+ * @param  {[String]} rule [Postcss Rule]
+ * @return {[Object]}
+ */
+function detachProps(rule) {
+    var rs = {};
+    var params = removeSpace(rule.params);
+    var nameRE = /[-\w]+\(/g;
+    var argsRE = /\(\S+\)/g;
+
+    var name = params.match(nameRE)[0];
+    name = name.substring(0, name.length - 1);
+
+    var args = params.match(argsRE)[0].replace(/\(|\)/g, '').split(',');
+
+    var content = removeSpace(rule.nodes[0].params);
+
+    rs.name = name;
+    rs.args = args;
+    rs.content = content;
+    return rs;
+}
+
+module.exports = postcss.plugin('postcss-precss-function', function(opts) {
+    if (typeof opts === 'undefined') {
         opts = {};
     }
 
-    opts = opts || {};
-
     var cwd = process.cwd();
+    var globs = [];
+    var fns = {};
+    var fnNames = [];
 
-    return function(root, result) {
-
-        var fnNodeArr = nodeTypeFilter(root.nodes, DEFINEFUNCTION_KEY);
-        if (fnNodeArr.length == 0) {
-            //throw decl.error('a');
-            result.warn('b');
-            //throw rule.error('No define-function');
-            return;
+    return function(css, result) {
+        var processFns = function(root) {
+            root.walkAtRules(function(i) {
+                console.log(i.name)
+                if(i.name === FUNCTION_KEY) {
+                    if(!insideDefine(i)) {
+                        insertFn(result, fns, i, processFns, opts);
+                    }
+                } else if(i.name === DEFINEFUNCTION_KEY) {
+                    defineFn(result, fns, i);
+                }
+            })
         }
 
-        var parseRs = getFnProps(fnNodeArr[0]);
+        var process = function() {
+            processFns(css);
+        };
 
-        // remove define statement in result
-        root.walkAtRules(function(rule) {
+        if(globs.length === 0) {
 
-            if (rule.name === DEFINEFUNCTION_KEY) {
-                rule.remove();
-            }
+        }
 
-        });
-
-        root.walkDecls(function(rule) {
-            var temp = getInvokedParams(rule.value);
-            if (temp) {
-                if (fnNameList.indexOf(temp.name) == -1) {
-                    throw rule.error('Undefined function ' + name);
-                }
-            }
-            var resultNode = {
-                prop: '',
-                value: ''
-            }
-            if(temp.name) {
-                resultNode.prop = rule.prop;
-                var tempValue = replaceFn(temp.name, temp.value);
-                resultNode.value = computeValue(tempValue);
-            }
-            if (resultNode.prop) {
-                rule.replaceWith({prop: resultNode.prop, value: resultNode.value})
-            }
-
-        })
-
+        //Don't filter any files now.
+        return globby('').then(process);
+        // may be this
+        // return process();
     }
-
-
 });
+
+
+/**
+ *  refer to http://astexplorer.net/#/2uBU1BLuJ1 .
+ */
+// module.exports = postcss.plugin('postcss-precss-function', function (opts) {
+
+//     if(typeof opts === 'undefined') {
+//         opts = {};
+//     }
+
+//     opts = opts || {};
+
+//     var cwd = process.cwd();
+
+//     return function(root, result) {
+
+//         var fnNodeArr = nodeTypeFilter(root.nodes, DEFINEFUNCTION_KEY);
+//         if (fnNodeArr.length == 0) {
+//             //throw decl.error('a');
+//             result.warn('b');
+//             //throw rule.error('No define-function');
+//             return;
+//         }
+
+//         var parseRs = getFnProps(fnNodeArr[0]);
+
+//         // remove define statement in result
+//         root.walkAtRules(function(rule) {
+
+//             if (rule.name === DEFINEFUNCTION_KEY) {
+//                 rule.remove();
+//             }
+
+//         });
+
+//         root.walkDecls(function(rule) {
+//             var temp = getInvokedParams(rule.value);
+//             if (temp) {
+//                 if (fnNameList.indexOf(temp.name) == -1) {
+//                     throw rule.error('Undefined function ' + name);
+//                 }
+//             }
+//             var resultNode = {
+//                 prop: '',
+//                 value: ''
+//             }
+//             if(temp.name) {
+//                 resultNode.prop = rule.prop;
+//                 var tempValue = replaceFn(temp.name, temp.value);
+//                 resultNode.value = computeValue(tempValue);
+//             }
+//             if (resultNode.prop) {
+//                 rule.replaceWith({prop: resultNode.prop, value: resultNode.value})
+//             }
+
+//         })
+
+//     }
+
+
+// });

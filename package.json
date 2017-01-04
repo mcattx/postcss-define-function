@@ -29,6 +29,7 @@
     "postcss-simple-vars": "^3.0.0"
   },
   "scripts": {
+    "start": "node ./test/src/testa.js",
     "test": "ava test/*.js  test/**/*.js"
   },
   "eslintConfig": {
