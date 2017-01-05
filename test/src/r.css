@@ -1,11 +1,6 @@
-/*@define-function rem($val) {
-    @return $val / 640 * 10 * 1rem;
-}*/
-
 a {
     width: 300px;
-    height: rem(640);
-}
+    height: 10rem}
 
 
 b {

@@ -1,10 +1,11 @@
 @define-function rem($val) {
-    $val / 640 * 10 * 1rem;
+    @return $val / 640 * 10 * 1rem;
 }
 
-@function a {
+@callFn a {
     width: 300px;
     height: rem(640);
+    line-height: 100;
 }
 
 

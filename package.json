@@ -30,7 +30,7 @@
   },
   "scripts": {
     "start": "node ./test/src/testa.js",
-    "test": "ava test/*.js  test/**/*.js"
+    "test": "ava test/test.js"
   },
   "eslintConfig": {
     "extends": "eslint-config-postcss/es5"
