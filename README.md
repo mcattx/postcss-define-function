@@ -10,7 +10,7 @@
 @define-function rem($val) {
     @return $val / 640 * 10 * 1rem;
 }
-@function .foo {
+@callFn .foo {
     /* Input example */
     height: rem(640);
 }
@@ -19,8 +19,7 @@
 ```css
 .foo {
   /* Output example */
-  height: 10rem;
-}
+  height: 10rem}
 ```
 
 ## Usage
@@ -30,6 +29,18 @@ postcss([ require('postcss-define-function') ])
 ```
 
 See [PostCSS] docs for examples for your environment.
+
+## Options
+
+Call plugin function to set options:
+
+```js
+postcss([ require('postcss-mixins')({ mixins: { … } }) ])
+```
+
+### `silent`
+Remove unknown callFns and do not throw a error. Default is false.
+
 
 ##Thanks
 
