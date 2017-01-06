@@ -37,12 +37,18 @@ test('test core feature', t => {
 
 
 
-test('throws error on unknown function', t => {
-    // return run(t, 'a{width: fix(10)}').catch(err => {
-    //     console.log('err: '+ err);
-    return postcss(fn).process('@callFn A{}').catch(err => {
-        console.log(err)
-        t.deepEqual(err, 'Undefined @define-function A');
+// test('throws error on unknown function', t => {
+//     // return run(t, 'a{width: fix(10)}').catch(err => {
+//     //     console.log('err: '+ err);
+//     return postcss(fn).process('@callFn A{}').catch(err => {
+//         console.log(err)
+//         t.deepEqual(err, 'Undefined @define-function A');
+//     })
+// });
+
+test('throws error', t => {
+    return run(t, '@callFn a{width: te()}', 'Undefined @define-function te').catch(err => {
+        t.deepEqual(err.reason, 'Undefined @define-function te');
     })
 });
 

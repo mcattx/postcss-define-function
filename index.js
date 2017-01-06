@@ -114,14 +114,14 @@ function insertFn(root, fns, fnNames, rule, processFns, opts) {
             var prop = i.prop;
             var meta = fns[name];
             var fn = meta && meta.fn;
-            var content = meta.content;
+
 
             if(!meta) {
                 if(!opts.silent) {
                     throw rule.error('Undefined @define-function ' + name);
                 }
             } else{
-
+                var content = meta.content;
                 if(fnNames.indexOf(name) !== -1) {
                     var tempValue = replaceFn(name, args, content);
                     i.value = computeValue(tempValue);
