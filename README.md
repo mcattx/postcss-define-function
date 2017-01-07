@@ -35,11 +35,11 @@ See [PostCSS] docs for examples for your environment.
 Call plugin function to set options:
 
 ```js
-postcss([ require('postcss-mixins')({ mixins: { … } }) ])
+postcss([ require('postcss-define-function') ])({ fns: { … } }) ])
 ```
 
 ### `silent`
-Remove unknown callFns and do not throw a error. Default is false.
+Remove unknown callFns and do not throw a error. Default is `false`.
 
 
 ##Thanks
