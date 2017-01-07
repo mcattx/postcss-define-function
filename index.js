@@ -119,7 +119,10 @@ function insertFn(root, fns, fnNames, rule, processFns, opts) {
             if(!meta) {
                 if(!opts.silent) {
                     throw rule.error('Undefined @define-function ' + name);
+                } else {
+                    i.parent.remove();
                 }
+
             } else{
                 var content = meta.content;
                 if(fnNames.indexOf(name) !== -1) {
