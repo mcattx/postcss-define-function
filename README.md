@@ -22,7 +22,8 @@
   height: 10rem}
 ```
 
-**It only supports the basic four mixed operations: `+`、`-`、`*`、`/`. If you want to be able to use more advanced features, you can use [mixins](https://github.com/postcss/postcss-mixins) instead or help me to improve it.Looking forward to your [issues](https://github.com/titancat/postcss-define-function/issues) and [pull requests](https://github.com/titancat/postcss-define-function/pulls)**
+**It only supports the basic four mixed operations: `+`、`-`、`*`、`/`. If you want to be able to use more advanced features, you can use [mixins](https://github.com/postcss/postcss-mixins) instead or help me to improve it.
+Looking forward to your [issues](https://github.com/titancat/postcss-define-function/issues) and [pull requests](https://github.com/titancat/postcss-define-function/pulls)**
 
 ## Usage
 
@@ -43,8 +44,16 @@ postcss([ require('postcss-define-function')({ silent: true }) ])
 ### `silent`
 Remove unknown callFns and do not throw a error. Default is `false`.
 
+## Test
+```js
+// basic feature test
+npm test
+// preview visual test results
+npm run testCase
+```
 
 ##Thanks
 
+- [postcss](https://github.com/postcss/postcss)
 - [postcss-plugin-boilerplate](https://github.com/postcss/postcss-plugin-boilerplate)
 - [postcss-mixins](https://github.com/postcss/postcss-mixins)
