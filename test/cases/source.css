@@ -1,0 +1,56 @@
+@define-function rem($val) {
+    @return $val / 640 * 10 * 1rem;
+}
+
+@callFn a {
+    width: 300px;
+    height: rem(640);
+    line-height: 100;
+}
+
+@define-function pe($val) {
+    @return $val / 10 * 5 * 1rem;
+}
+
+@callFn b {
+    color: red;
+    width: pe(10);
+}
+
+@define-function pe($val) {
+    @return $val / $val * ($val - 2)rem;
+}
+
+@callFn a {
+    width: pe(10);
+}
+
+@define-function pe($a, $b) {
+    @return $a + $b + 10px;
+}
+@callFn b{
+    width: pe(10, 10)
+}
+
+@define-function pe($n) {
+    @return $n / $n * ($n - 2)cm;
+}
+@callFn a {
+    color: red;
+    height: pe(10);
+}
+
+
+b {
+    color: #fff;
+}
+
+@media screen and (min-width: 480px) {
+    body {
+        background-color: lightgreen;
+    }
+}
+
+ul li {
+    padding: 5px;
+}

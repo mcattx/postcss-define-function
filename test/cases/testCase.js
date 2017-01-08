@@ -6,13 +6,13 @@ var fs = require('fs');
 var fn = require('../../index.js');
 
 var opts = {
-
+    silent: true
 };
 
-fs.readFile('test/src/a.css', 'utf8', (err, css) => {
+fs.readFile('test/cases/source.css', 'utf8', (err, css) => {
     postcss(fn(opts)).process(css).then(
         result => {
-            fs.writeFile('test/src/r.css', result, (err) => {
+            fs.writeFile('test/cases/result.css', result, (err) => {
                 if(err) {
                     console.log('Write file error: ' + err);
                 }

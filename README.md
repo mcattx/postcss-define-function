@@ -37,7 +37,7 @@ See [PostCSS] docs for examples for your environment.
 Call plugin function to set options:
 
 ```js
-postcss([ require('postcss-define-function') ])({ fns: { … } }) ])
+postcss([ require('postcss-define-function')({ silent: true }) ])
 ```
 
 ### `silent`

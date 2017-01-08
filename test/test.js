@@ -34,7 +34,6 @@ test('test multiple decls', t => {
         );
 });
 
-// fail now
 test('test multiple params in @return statement', t => {
     return run(t, '@define-function pe($val) {@return $val / $val * ($val - 2)rem;} @callFn a {color: red;width: pe(10);height: 20px}',
         'a {color: red;width: 8rem;height: 20px}'
@@ -46,19 +45,18 @@ test('test multiple params in define statement', t => {
         'a {width: 30px}')
 });
 
-// fail now
 test('test different css value units', t => {
     return run(t, '@define-function pe($n) {@return $n / $n * ($n - 2)cm;} @callFn a {color: red;width: pe(10);height: 20px}',
         'a {color: red;width: 8cm;height: 20px}'
         );
 });
 
-// fail now
-test.skip('test variables', t => {
-    return run(t, '$column: 20; @define-function pe() {@return $colum * 3px} @callFn a {width: pe();}',
-        'a {width: 60px}'
-        );
-});
+// I decide not to support this feature, this function should be supported by postcss-simple-vars
+// test.skip('test variables', t => {
+//     return run(t, '$column: 20; @define-function pe() {@return $colum * 3px} @callFn a {width: pe();}',
+//         'a {width: 60px}'
+//         );
+// });
 
 test('throws error on unknown callFn', t => {
     return run(t, '@callFn a{width: te()}', 'Undefined @define-function te').catch(err => {

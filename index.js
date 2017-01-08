@@ -3,8 +3,6 @@ var postcss = require('postcss');
 var globby = require('globby');
 var vars = require('postcss-simple-vars');
 var path = require('path');
-var fs = require('fs');
-var isWindows = require('os').platform().indexOf('win32') !== -1;
 
 var fn = {};
 // record all customize function name
@@ -44,7 +42,6 @@ function replaceFn(name, args, content) {
     var length = args.length;
 
     if (length) {
-
         if(length === 1) {
             content = content.replace(oneVarRE, args[0]);
         } else {
