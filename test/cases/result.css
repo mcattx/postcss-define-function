@@ -1,0 +1,31 @@
+a {
+    width: 300px;
+    height: 10rem;
+    line-height: 100}
+
+b {
+    color: red;
+    width: 5rem}
+
+a {
+    width: 8rem}
+b {
+    width: 30px}
+a {
+    color: red;
+    height: 8cm}
+
+
+b {
+    color: #fff;
+}
+
+@media screen and (min-width: 480px) {
+    body {
+        background-color: lightgreen;
+    }
+}
+
+ul li {
+    padding: 5px;
+}

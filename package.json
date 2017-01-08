@@ -1,6 +1,6 @@
 {
   "name": "postcss-define-function",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "PostCSS plugin : A plugin to implement sass @function directive",
   "keywords": [
     "postcss",
@@ -26,10 +26,12 @@
     "ava": "^0.17.0",
     "eslint": "^3.10.2",
     "eslint-config-postcss": "^2.0.2",
+    "globby": "^6.1.0",
     "postcss-simple-vars": "^3.0.0"
   },
   "scripts": {
-    "test": "ava test/*.js  test/**/*.js"
+    "test": "ava test/test.js",
+    "testCase": "node ./test/cases/testCase.js"
   },
   "eslintConfig": {
     "extends": "eslint-config-postcss/es5"

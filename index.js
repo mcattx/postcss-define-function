@@ -1,9 +1,8 @@
 var jsToCss = require('postcss-js/parser');
 var postcss = require('postcss');
+var globby = require('globby');
 var vars = require('postcss-simple-vars');
 var path = require('path');
-var fs = require('fs');
-var isWindows = require('os').platform().indexOf('win32') !== -1;
 
 var fn = {};
 // record all customize function name
@@ -12,126 +11,51 @@ var fnNameList = [];
 var DEFINEFUNCTION_KEY = 'define-function';
 var FUNCTION_KEY = 'function';
 var RETURN_KEY = 'return';
+var PARSEFUNCTION_KEY = 'callFn';
 
+/**
+ * [remove space in target string]
+ * @param  {[String]} str
+ * @return {[String]}
+ */
 function removeSpace(str) {
     return str.replace(/\s+/g, '');
 }
 
-// '$a' => 'a'
-function getVariable(str) {
-    return str.substr(1);
-}
-
 /**
- * [Filter the desired type in the nodes]
- * @param  {[Array]} nodes    [The node to be filtered]
- * @param  {[String]} nodeType [atrule default]
- * @param  {[String]} typeName [type name]
- * @return {[Array]}          [desired type array]
+ * [replaceFn description]
+ * @param  {[type]} name    [custom function name]
+ * @param  {[type]} args    [custom function arguments]
+ * @param  {[type]} content [custom function content]
+ * @return {[String]}
+ *
+ *
+ *  rem(640) => 640 / 640 * 10 rem;
  */
-function nodeTypeFilter(nodes, typeName, nodeType) {
-    nodeType = nodeType || 'atrule';
-    var resultArr = [];
-    if(!Array.isArray(nodes)){
-        console.log('The nodeTypeFilter function requires param nodes which is Array.')
-    }
-
-    for (var i = 0; i < nodes.length; i++) {
-        if(nodes[i].type === nodeType && nodes[i].name === typeName) {
-            resultArr.push(nodes[i]);
-        }
-    }
-
-    return resultArr;
-}
-
-// 'rem($a, $b)' => {fnName: 'rem', fnArgs: [$a, $b]}
-// '@return $val / 640 * 10 * 1rem' => {fnContent: '$val / 640 * 10 * 1rem'}
-function getFnProps(fnNode) {
-    var rs = {};
-    var propsStr = fnNode.params;
-    propsStr = removeSpace(propsStr);
-
-    var nameRE = /[\w]+\(/g;
-    var paramsRE = /\(\S+\)/g;
-    var fnName = propsStr.match(nameRE)[0];
-    var fnArgs = [];
-    var fnContent = '';
-
-    var fnContentNode = nodeTypeFilter(fnNode.nodes, RETURN_KEY);
-
-    fnName = fnName.substring(0, fnName.length - 1);
-    fnArgs = propsStr.match(paramsRE)[0].replace(/\(|\)/g, '').split(',');
-    fnContent = fnContentNode[0].params;
-
-    rs.fnName = fnName;
-    rs.fnArgs = fnArgs;
-    rs.fnContent = fnContent;
-
-    fn[fnName] = {
-        'fn': fnName,
-        'args': fnArgs,
-        'content': fnContent
-    }
-
-    fnNameList.push(fnName);
-
-    return rs;
-}
-
-/**
- * Separate params
- * 'rem(10)' => {name: rem, value: ['10']}
- */
-function getInvokedParams(value) {
-    var result = {};
-
-    var fnValueRE = /\(\S*\)/g;
-    var fnNameRE = /\S+\(/g;
-
-    var nodeValue = removeSpace(value);
-
-    if(fnValueRE.test(nodeValue)) {
-
-        var valueStr = nodeValue.match(fnValueRE)[0].replace(/\(|\)/g, '');
-        var temp = nodeValue.match(fnNameRE)[0];
-        var nameStr = temp.substr(0, temp.length - 1);
-
-        if (valueStr) {
-            result.value = valueStr.split(',');
-        } else {
-            result.value = [];
-        }
-
-        if(nameStr) {
-            result.name = nameStr;
-        }
-
-    }
-
-    return result;
-}
-
-function replaceFn(fnName, fnValueArr) {
+function replaceFn(name, args, content) {
     var newContent = '';
+    var oneVarRE = /(\$\w+)/g;
     var variableRE = /(\$\w+)([\+\-\*/@])/g;
-    var content = removeSpace(fn[fnName].content);
+    var content = removeSpace(content);
     // to get '$a' in the end of a content string beacuse of my bad Reg
     content = content + '@';
-    var length = fnValueArr.length;
+    var length = args.length;
 
     if (length) {
+        if(length === 1) {
+            content = content.replace(oneVarRE, args[0]);
+        } else {
+            var i = 0;
+            var replacer = function(str, $1, $2) {
+                if(args[i]){
+                    return args[i++] + $2;
+                } else {
+                    return str;
+                }
 
-        var i = 0;
-        var replacer = function(str, $1, $2) {
-            if(fnValueArr[i]){
-                return fnValueArr[i++] + $2;
-            } else {
-                return str;
             }
-
+            content = content.replace(variableRE, replacer);
         }
-        content = content.replace(variableRE, replacer);
 
     } else {
         // no params
@@ -140,9 +64,18 @@ function replaceFn(fnName, fnValueArr) {
     // delete '@'
     newContent = content.substr(0, content.length - 1);
 
+
+
     return newContent;
 }
 
+/**
+ * [computeValue description]
+ * @param  {[String]} valueStr [css value to be calculated]
+ * @return {[String]}
+ *
+ * '640 / 640 * 10 rem' => '10rem'
+ */
 function computeValue(valueStr) {
     var resultStr = '';
     // length data unit
@@ -159,62 +92,165 @@ function computeValue(valueStr) {
 }
 
 /**
- *  refer to http://astexplorer.net/#/2uBU1BLuJ1 .
+ *  refer to : https://github.com/postcss/postcss-mixins/blob/master/index.js
+ *  beacuse last version code is too ugly, I decide to refactor my codes.
  */
-module.exports = postcss.plugin('postcss-precss-function', function (opts) {
 
-    if(typeof opts === 'undefined') {
+function insideDefine(rule) {
+    var parent = rule.parent;
+    if(!parent) {
+        return false;
+    } else if(parent.name === DEFINEFUNCTION_KEY) {
+        return true;
+    } else {
+        return insideDefine(parent);
+    }
+}
+
+function insertFn(root, fns, fnNames, rule, processFns, opts) {
+
+    rule.walkDecls(function(i) {
+        var name = detachCustomName(i.value);
+        var args = detachCustomValues(i.value);
+
+        if(name && name != '') {
+            var selector = i.parent.params;
+            var prop = i.prop;
+            var meta = fns[name];
+            var fn = meta && meta.fn;
+
+
+            if(!meta) {
+                if(!opts.silent) {
+                    throw rule.error('Undefined @define-function ' + name);
+                } else {
+                    i.parent.remove();
+                }
+
+            } else{
+                var content = meta.content;
+                if(fnNames.indexOf(name) !== -1) {
+                    var tempValue = replaceFn(name, args, content);
+                    i.value = computeValue(tempValue);
+
+                    // @callFn a {} => a {};
+                    var proxy = postcss.parse('a{}');
+                    proxy.type = 'rule';
+                    proxy.selector = i.parent.params;
+                    proxy.nodes = i.parent.nodes;
+                    i.parent.replaceWith(proxy);
+                }
+            }
+
+        }
+    })
+
+}
+
+function defineFn(result, fns, fnNames, rule) {
+    var fn = detachProps(rule);
+    var name = fn.name;
+    var args = fn.args;
+    var content = fn.content;
+
+    fns[name] = {
+        name: name,
+        args: args,
+        content: content
+    };
+
+    fnNames.push(name);
+
+    rule.remove();
+}
+/**
+ * [detach custom name in rule]
+ * @param  {[String]} ruleName
+ * @return {[String]}
+ *
+ * rem(400) || rem($val) => rem
+ */
+function detachCustomName(ruleName) {
+    ruleName = removeSpace(ruleName);
+    var nameRE = /[-\w]+\(/g;
+    var name = '';
+
+    if(ruleName.match(nameRE)) {
+        name = ruleName.match(nameRE)[0];
+        name = name.substring(0, name.length - 1);
+    }
+
+    return name;
+}
+
+/**
+ * [detachCustomValues description]
+ * @param  {[String]} ruleName [ruleName]
+ * @return {[Array]}
+ *
+ *  'rem(a, b, c)' => ['a', 'b', 'c']
+ */
+function detachCustomValues(ruleName) {
+    ruleName = removeSpace(ruleName);
+    var argsRE = /\(\S+\)/g;
+    var args = [];
+    if(ruleName.match(argsRE)) {
+        args = ruleName.match(argsRE)[0].replace(/\(|\)/g, '').split(',');
+    }
+
+    return args;
+}
+
+/**
+ * [detach props from function definition]
+ * @param  {[String]} rule [Postcss Rule]
+ * @return {[Object]}
+ *
+ * @define-function rem($val) {@return $val / 640 * 10 * 1rem} => {name: 'rem', args: ['$val'], content: '$val / 640 * 10 * 1rem'}
+ *
+ */
+function detachProps(rule) {
+    var rs = {};
+    var params = removeSpace(rule.params);
+    var argsRE = /\(\S+\)/g;
+
+    var name = detachCustomName(params);
+
+    var args = detachCustomValues(params);
+
+    var content = removeSpace(rule.nodes[0].params);
+
+    rs.name = name;
+    rs.args = args;
+    rs.content = content;
+    return rs;
+}
+
+module.exports = postcss.plugin('postcss-precss-function', function(opts) {
+    if (typeof opts === 'undefined') {
         opts = {};
     }
 
-    opts = opts || {};
-
     var cwd = process.cwd();
+    var globs = [];
+    var fns = {};
+    var fnNames = [];
 
-    return function(root, result) {
-
-        var fnNodeArr = nodeTypeFilter(root.nodes, DEFINEFUNCTION_KEY);
-        if (fnNodeArr.length == 0) {
-            //throw decl.error('a');
-            result.warn('b');
-            //throw rule.error('No define-function');
-            return;
+    return function(css, result, root) {
+        var processFns = function(root) {
+            root.walkAtRules(function(i) {
+                if(i.name === PARSEFUNCTION_KEY) {
+                    if(!insideDefine(i)) {
+                        insertFn(root, fns, fnNames, i, processFns, opts);
+                    }
+                } else if(i.name === DEFINEFUNCTION_KEY) {
+                    defineFn(result, fns, fnNames, i);
+                }
+            })
         }
 
-        var parseRs = getFnProps(fnNodeArr[0]);
-
-        // remove define statement in result
-        root.walkAtRules(function(rule) {
-
-            if (rule.name === DEFINEFUNCTION_KEY) {
-                rule.remove();
-            }
-
-        });
-
-        root.walkDecls(function(rule) {
-            var temp = getInvokedParams(rule.value);
-            if (temp) {
-                if (fnNameList.indexOf(temp.name) == -1) {
-                    throw rule.error('Undefined function ' + name);
-                }
-            }
-            var resultNode = {
-                prop: '',
-                value: ''
-            }
-            if(temp.name) {
-                resultNode.prop = rule.prop;
-                var tempValue = replaceFn(temp.name, temp.value);
-                resultNode.value = computeValue(tempValue);
-            }
-            if (resultNode.prop) {
-                rule.replaceWith({prop: resultNode.prop, value: resultNode.value})
-            }
-
-        })
+        processFns(css);
 
     }
-
-
 });
+
