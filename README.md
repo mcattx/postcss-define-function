@@ -22,6 +22,8 @@
   height: 10rem}
 ```
 
+***It only supports the basic four mixed operations: `+`、`-`、`*`、`/`. If you want to be able to use more advanced features, you can use [mixins](https://github.com/postcss/postcss-mixins) instead or help me to improve it.Looking forward to your [issues](https://github.com/titancat/postcss-define-function/issues) and [pull requests](https://github.com/titancat/postcss-define-function/pulls)***
+
 ## Usage
 
 ```js
