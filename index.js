@@ -1,7 +1,4 @@
-var jsToCss = require('postcss-js/parser');
 var postcss = require('postcss');
-var globby = require('globby');
-var vars = require('postcss-simple-vars');
 var path = require('path');
 
 var fn = {};
