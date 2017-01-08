@@ -35,9 +35,9 @@ test('test multiple decls', t => {
 });
 
 // fail now
-test.skip('test multiple params in @return statement', t => {
+test('test multiple params in @return statement', t => {
     return run(t, '@define-function pe($val) {@return $val / $val * ($val - 2)rem;} @callFn a {color: red;width: pe(10);height: 20px}',
-        'a {color: red;width: 1rem;height: 20px}'
+        'a {color: red;width: 8rem;height: 20px}'
         );
 });
 
@@ -47,9 +47,9 @@ test('test multiple params in define statement', t => {
 });
 
 // fail now
-test.skip('test different css value units', t => {
+test('test different css value units', t => {
     return run(t, '@define-function pe($n) {@return $n / $n * ($n - 2)cm;} @callFn a {color: red;width: pe(10);height: 20px}',
-        'a {color: red;width: 1cm;height: 20px}'
+        'a {color: red;width: 8cm;height: 20px}'
         );
 });
 

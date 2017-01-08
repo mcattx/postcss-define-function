@@ -36,6 +36,7 @@ function removeSpace(str) {
  */
 function replaceFn(name, args, content) {
     var newContent = '';
+    var oneVarRE = /(\$\w+)/g;
     var variableRE = /(\$\w+)([\+\-\*/@])/g;
     var content = removeSpace(content);
     // to get '$a' in the end of a content string beacuse of my bad Reg
@@ -44,16 +45,20 @@ function replaceFn(name, args, content) {
 
     if (length) {
 
-        var i = 0;
-        var replacer = function(str, $1, $2) {
-            if(args[i]){
-                return args[i++] + $2;
-            } else {
-                return str;
-            }
+        if(length === 1) {
+            content = content.replace(oneVarRE, args[0]);
+        } else {
+            var i = 0;
+            var replacer = function(str, $1, $2) {
+                if(args[i]){
+                    return args[i++] + $2;
+                } else {
+                    return str;
+                }
 
+            }
+            content = content.replace(variableRE, replacer);
         }
-        content = content.replace(variableRE, replacer);
 
     } else {
         // no params
@@ -61,6 +66,8 @@ function replaceFn(name, args, content) {
     }
     // delete '@'
     newContent = content.substr(0, content.length - 1);
+
+
 
     return newContent;
 }
