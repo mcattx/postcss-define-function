@@ -53,7 +53,7 @@ npm test
 npm run testCase
 ```
 
-##Thanks
+## Thanks
 
 - [postcss](https://github.com/postcss/postcss)
 - [postcss-plugin-boilerplate](https://github.com/postcss/postcss-plugin-boilerplate)
